@@ -25,11 +25,12 @@
 extern int mipi_status;
 #define DEFAULT_BRIGHTNESS 143
 extern int bl_level_prevset;
-extern struct dsi_cmd_desc *mipi_power_on_cmd;
-extern struct dsi_cmd_desc *mipi_power_off_cmd;
-extern int mipi_power_on_cmd_size;
-extern int mipi_power_off_cmd_size;
-extern char ptype[60];
+
+struct dsi_cmd_desc *mipi_power_on_cmd = NULL;
+struct dsi_cmd_desc *mipi_power_off_cmd = NULL;
+int mipi_power_on_cmd_size = 0;
+int mipi_power_off_cmd_size = 0;
+char ptype[60] = "Panel Type = ";
 
 static struct mipi_dsi_panel_platform_data *mipi_samsung_pdata;
 

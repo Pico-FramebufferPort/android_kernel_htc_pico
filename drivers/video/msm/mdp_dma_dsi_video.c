@@ -1,4 +1,5 @@
-/* Copyright (c) 2011-2012, The Linux Foundation. All rights reserved.
+/*
+ * Copyright (c) 2011-2013, The Linux Foundation. All rights reserved.
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 2 and
@@ -129,6 +130,7 @@ int mdp_dsi_video_on(struct platform_device *pdev)
 
 	vsync_cntrl.dev = mfd->fbi->dev;
 	atomic_set(&vsync_cntrl.suspend, 0);
+	vsync_cntrl.vsync_irq_enabled = 0;
 	bpp = fbi->var.bits_per_pixel / 8;
 	buf = (uint8 *) fbi->fix.smem_start;
 
@@ -284,7 +286,7 @@ int mdp_dsi_video_on(struct platform_device *pdev)
 		/*Turning on DMA_P block*/
 		mdp_pipe_ctrl(MDP_DMA2_BLOCK, MDP_BLOCK_POWER_ON, FALSE);
 	}
-
+	mdp_histogram_ctrl_all(TRUE);
 	/* MDP cmd block disable */
 	mdp_pipe_ctrl(MDP_CMD_BLOCK, MDP_BLOCK_POWER_OFF, FALSE);
 
@@ -298,6 +300,8 @@ int mdp_dsi_video_off(struct platform_device *pdev)
 #ifdef CONFIG_FB_MSM_MIPI_DSI_LG4573B
 	static boolean firstbootend=true;
 #endif
+
+	mdp_histogram_ctrl_all(FALSE);
 
 /* LGE_CHANGE_S : LCD ESD Protection 
  * 2012-01-30, yoonsoo@lge.com
@@ -337,7 +341,7 @@ int mdp_dsi_video_off(struct platform_device *pdev)
 	}
 #endif
 	/*[LGSI_SP4_BSP_END] [kiran.jainapure@lge.com] */
-
+	
 	return ret;
 }
 

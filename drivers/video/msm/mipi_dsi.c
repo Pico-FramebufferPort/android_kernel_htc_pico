@@ -50,6 +50,8 @@ static int mipi_dsi_remove(struct platform_device *pdev);
 
 static int mipi_dsi_off(struct platform_device *pdev);
 static int mipi_dsi_on(struct platform_device *pdev);
+static int mipi_dsi_fps_level_change(struct platform_device *pdev,
+					u32 fps_level);
 
 static struct platform_device *pdev_list[MSM_FB_MAX_DEV_LIST];
 static int pdev_list_cnt;
@@ -90,14 +92,13 @@ extern unsigned int maker_id;  //LGE_CHANGE, sohyun.nam@lge.com, 12-12-27, maker
 extern void mipi_ldp_lcd_hx8379a_panel_poweroff(void);
 #endif
 
-int mipi_status = 1;
-struct mutex cmdlock;
-int bl_level_prevset = 0;
-struct dsi_cmd_desc *mipi_power_on_cmd = NULL;
-struct dsi_cmd_desc *mipi_power_off_cmd = NULL;
-int mipi_power_on_cmd_size = 0;
-int mipi_power_off_cmd_size = 0;
-char ptype[60] = "Panel Type = ";
+static int mipi_dsi_fps_level_change(struct platform_device *pdev,
+					u32 fps_level)
+{
+	mipi_dsi_wait4video_done();
+	mipi_dsi_configure_fb_divider(fps_level);
+	return 0;
+}
 
 static int mipi_dsi_off(struct platform_device *pdev)
 {
@@ -165,6 +166,7 @@ static int mipi_dsi_off(struct platform_device *pdev)
 	ret = panel_next_off(pdev);
 
 	spin_lock_bh(&dsi_clk_lock);
+
 	mipi_dsi_clk_disable();
 
 	/* disbale dsi engine */
@@ -207,6 +209,7 @@ static int mipi_dsi_off(struct platform_device *pdev)
 /* LGE_CHANGE_E jungrock.oh@lge.com 2013-01-15 add featuring for booting animation sometimes no display*/
 	if(!lglogo_firstboot)
 		mipi_dsi_unprepare_clocks();
+                mipi_dsi_unprepare_ahb_clocks();
 		lglogo_firstboot=false;
 #endif
 #endif
@@ -264,7 +267,7 @@ static int mipi_dsi_on(struct platform_device *pdev)
 	/*[LGSI_SP4_BSP_END] [kiran.jainapure@lge.com]*/
 	
 	cont_splash_clk_ctrl(0);
-	mipi_dsi_prepare_clocks();
+	mipi_dsi_prepare_ahb_clocks();
 
 	mipi_dsi_ahb_ctrl(1);
 
@@ -428,6 +431,11 @@ static int mipi_dsi_on(struct platform_device *pdev)
 	return ret;
 }
 
+static int mipi_dsi_early_off(struct platform_device *pdev)
+{
+	return panel_next_early_off(pdev);
+}
+
 
 static int mipi_dsi_late_init(struct platform_device *pdev)
 {
@@ -528,11 +536,13 @@ static int mipi_dsi_probe(struct platform_device *pdev)
 
 		if (mipi_dsi_pdata->splash_is_enabled &&
 			!mipi_dsi_pdata->splash_is_enabled()) {
+                        mipi_dsi_prepare_ahb_clocks();
 			mipi_dsi_ahb_ctrl(1);
 			MIPI_OUTP(MIPI_DSI_BASE + 0x118, 0);
 			MIPI_OUTP(MIPI_DSI_BASE + 0x0, 0);
 			MIPI_OUTP(MIPI_DSI_BASE + 0x200, 0);
 			mipi_dsi_ahb_ctrl(0);
+                        mipi_dsi_unprepare_ahb_clocks();
 		}
 		mipi_dsi_resource_initialized = 1;
 
@@ -581,7 +591,9 @@ static int mipi_dsi_probe(struct platform_device *pdev)
 	pdata = mdp_dev->dev.platform_data;
 	pdata->on = mipi_dsi_on;
 	pdata->off = mipi_dsi_off;
+	pdata->fps_level_change = mipi_dsi_fps_level_change;
 	pdata->late_init = mipi_dsi_late_init;
+	pdata->early_off = mipi_dsi_early_off;
 	pdata->next = pdev;
 
 	/*

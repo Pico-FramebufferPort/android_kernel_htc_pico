@@ -43,17 +43,17 @@
 #define MIPI_DSI_PRIM 1
 #define MIPI_DSI_SECD 2
 
-#define MIPI_DSI_PANEL_VGA	0
-#define MIPI_DSI_PANEL_WVGA	1
-#define MIPI_DSI_PANEL_WVGA_PT	2
-#define MIPI_DSI_PANEL_FWVGA_PT	3
-#define MIPI_DSI_PANEL_HVGA_PT	4
-#define MIPI_DSI_PANEL_WSVGA_PT	5
+#define MIPI_DSI_PANEL_VGA 0
+#define MIPI_DSI_PANEL_WVGA 1
+#define MIPI_DSI_PANEL_WVGA_PT 2
+#define MIPI_DSI_PANEL_FWVGA_PT 3
+#define MIPI_DSI_PANEL_HVGA_PT 4
+#define MIPI_DSI_PANEL_WSVGA_PT 5
 #define MIPI_DSI_PANEL_QHD_PT 6
-#define MIPI_DSI_PANEL_WXGA	7
-#define MIPI_DSI_PANEL_WUXGA	8
-#define MIPI_DSI_PANEL_720P_PT	9
-#define DSI_PANEL_MAX	9
+#define MIPI_DSI_PANEL_WXGA 7
+#define MIPI_DSI_PANEL_WUXGA 8
+#define MIPI_DSI_PANEL_720P_PT 9
+#define DSI_PANEL_MAX 9
 
 enum {		/* mipi dsi panel */
 	DSI_VIDEO_MODE,
@@ -267,14 +267,12 @@ typedef void (*fxn)(u32 data);
 
 #define CMD_REQ_RX	0x0001
 #define CMD_REQ_COMMIT 0x0002
-#define CMD_CLK_CTRL	0x0004
 #define CMD_REQ_NO_MAX_PKT_SIZE 0x0008
 
 struct dcs_cmd_req {
 	struct dsi_cmd_desc *cmds;
 	int cmds_cnt;
 	u32 flags;
-	struct dsi_buf *rbuf;
 	int rlen;	/* rx length */
 	fxn cb;
 };
@@ -338,8 +336,9 @@ int mipi_dsi_clk_div_config(uint8 bpp, uint8 lanes,
 			    uint32 *expected_dsi_pclk);
 int mipi_dsi_clk_init(struct platform_device *pdev);
 void mipi_dsi_clk_deinit(struct device *dev);
-void mipi_dsi_prepare_clocks(void);
 void mipi_dsi_unprepare_clocks(void);
+void mipi_dsi_prepare_ahb_clocks(void);
+void mipi_dsi_unprepare_ahb_clocks(void);
 void mipi_dsi_ahb_ctrl(u32 enable);
 void cont_splash_clk_ctrl(int enable);
 void mipi_dsi_turn_on_clks(void);
